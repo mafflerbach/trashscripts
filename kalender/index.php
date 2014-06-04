@@ -770,15 +770,15 @@
 
   setlocale(LC_ALL, 'de_DE.utf8');
 
-  function printPage() {
+  function oneW2p($year, $format) {
 
-    $year = new CalendarYear(2014);
+    $year = new CalendarYear($year);
     $months = $year->months();
 
     foreach ($months as $month) {
       foreach ($month->weeks() as $week) {
 
-        print('<div class="block" style="page-break-after:always">');
+        print('<div class="block '.$format.'" style="page-break-after:always">');
         print('<span class="weekNum">');
         print(strftime('Woche %W', $week->timestamp));
         print('</span>');
@@ -787,7 +787,7 @@
         foreach ($week->days() as $day) {
           $class = "";
 
-          $dayStr = date('D', $day->timestamp) ;
+          $dayStr = date('D', $day->timestamp);
           if ($dayStr == 'Sun') {
             $class = "sun";
           }
@@ -803,12 +803,9 @@
           if ($dayStr == 'Sun' || $dayStr == 'Sat') {
             printlist(5);
           } else {
-            printlist(9);
+            printlist(10);
 
           }
-
-
-
           print('</div>');
 
         }
@@ -820,26 +817,152 @@
     }
   }
 
+
+  function oneW1p($year) {
+
+    $year = new CalendarYear($year);
+    $months = $year->months();
+
+    foreach ($months as $month) {
+      foreach ($month->weeks() as $week) {
+
+        print('<div class="block oneW1p" style="page-break-after:always">');
+        print('<span class="weekNum">');
+        print(strftime('Woche %W', $week->timestamp));
+        print('</span>');
+
+        print('<div class="week firs">');
+        foreach ($week->days() as $day) {
+          $class = "";
+
+          $dayStr = date('D', $day->timestamp);
+          if ($dayStr == 'Sun') {
+            $class = "sun";
+          }
+          if ($dayStr == 'Sat') {
+            $class = "sat";
+          }
+
+          print('<span class="date ' . $class . '">' . strftime('%A - %d.%m.%Y', $day->timestamp) . '</span>');
+          print('<div class="place ' . $class . '">');
+
+          if ($dayStr == 'Sun' || $dayStr == 'Sat') {
+            printlist(4);
+          } else {
+            printlist(4);
+
+          }
+          print('</div>');
+
+        }
+        print('</div>');
+        print('</div>');
+        print('<br/>');
+
+      };
+    }
+  }
+
+
+
+  function printPage($layout, $year, $format ='') {
+    switch($layout) {
+      case 'oneW2p' :
+        $layout($year, $format);
+        break;
+      case 'oneW1p' :
+        $layout($year);
+        break;
+      case 'a4a7' :
+        $layout($year);
+        break;
+      default :
+        print("can't find layout");
+        break;
+    }
+  }
+
   function printlist($num) {
     print('<ul>');
-    for($i =0; $i < $num; $i++) {
+    for ($i = 0; $i < $num; $i++) {
       print('<li></li>');
     }
     print('</ul>');
   }
 
 
+  function duplex ($weekNr) {
+    $week = new CalendarWeek(2014, $weekNr);
+
+      print('<div class="block a4a7 ">');
+      print('<span class="weekNum">');
+      print(strftime('Woche %W', $week->timestamp));
+      print('</span>');
+
+      print('<div class="week firs">');
+      foreach ($week->days() as $day) {
+        $class = "";
+
+        $dayStr = date('D', $day->timestamp);
+        if ($dayStr == 'Sun') {
+          $class = "sun";
+        }
+        if ($dayStr == 'Sat') {
+          $class = "sat";
+        }
+        if (date('D', $day->timestamp) == 'Thu') {
+          print('</div><div class="week second">');
+        }
+        print('<span class="date ' . $class . '">' . strftime('%A - %d.%m.%Y', $day->timestamp) . '</span>');
+        print('<div class="place ' . $class . '">');
+
+        if ($dayStr == 'Sun' || $dayStr == 'Sat') {
+          printlist(4);
+        } else {
+          printlist(6);
+
+        }
+        print('</div>');
+
+      }
+      print('</div>');
+      print('</div>');
+      print('<br/>');
+
+
+  }
+
 ?>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="print.css" media="print" />
+  <link rel="stylesheet" type="text/css" href="print.css" media="print"/>
   <link href='http://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
   <style>
     body {
       font-family: 'Indie Flower', cursive;
     }
+
+    .block.a4a7 {
+      font-size: 6px;
+      margin-bottom: 2em;
+
+    }
+
+    .block.a4a7 li  {
+
+    }
+
+
+    .a4a7 .week {
+      display: inline-block;
+      vertical-align: top;
+      width: 40%;
+      margin:0px 6em 0px 4em;;
+    }
+
     .weekNum {
       display: block;
+      padding-left: 5em;
     }
 
     ul {
@@ -850,9 +973,11 @@
     li {
       border: 1px solid lightgray;
       border-top: 0px;
-      list-style-type: circle;
+      list-style-type: none;
+      height: 1.5em;
 
     }
+
     .week {
       display: inline-block;
       vertical-align: top;
@@ -863,10 +988,6 @@
       color: crimson;
     }
 
-    div.sat, div.sun {
-      height: 10em;
-    }
-
     .date {
       display: block;
       background-color: #efefef;
@@ -874,15 +995,44 @@
     }
 
     .place {
-      height: 16.5em;
+      margin-bottom: 2em;
     }
+
+
+    .oneW1p .place{
+      margin-bottom: 0.5em;
+    }
+
+
 
   </style>
 
 </head>
 <body>
+
 <?php
-  printPage();
+
+  $pages = array(
+    array(1,3,5,2,4,6),
+    array(7,9,11, 11, 8, 12),
+    array(13,15,17,14,16,18),
+    array(19,21,23,20,22,24),
+    array(25,27,29,26,28,30),
+    array(31,33,35,32,34,36),
+    array(37,39,41,38,40,42),
+    array(43,45,47,44,46,48),
+    array(49,51,53,50,52)
+  );
+  printPage('oneW2p', 2014);
+  //printPage('oneW1p', 2014);
+
+/*
+  for($i=0 ;$i < count($pages); $i++) {
+    for ($k =0; $k < count($pages[$i]); $k++) {
+      duplex($pages[$i][$k]);
+    }
+  }
+*/
 ?>
 
 </body>
